@@ -8,8 +8,8 @@
 		<version>3.1.2</version>
 		<relativePath/> <!-- lookup parent from repository -->
 	</parent>
-	<groupId>com.exception</groupId>
-	<artifactId>exception</artifactId>
+	<groupId>com.apartmentmanagement</groupId>
+	<artifactId>user-service</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
 	<name>exception</name>
 	<description>exception project for Spring Boot</description>
