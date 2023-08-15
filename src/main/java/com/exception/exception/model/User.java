@@ -18,4 +18,6 @@ public class User implements Serializable {
     private String emailId;
     private String phoneNo;
     private Address address;
+    private String password;
+    private Recovery recovery;
 }

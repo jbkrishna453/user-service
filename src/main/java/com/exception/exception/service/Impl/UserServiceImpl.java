@@ -7,6 +7,7 @@ import com.exception.exception.exception.DataNotFoundException;
 import com.exception.exception.model.Address;
 import com.exception.exception.model.User;
 import com.exception.exception.repository.UserRepository;
+import com.exception.exception.service.IdentityService;
 import com.exception.exception.service.UserService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.AllArgsConstructor;
@@ -14,6 +15,7 @@ import lombok.NoArgsConstructor;
 import lombok.RequiredArgsConstructor;
 import lombok.ToString;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.CollectionUtils;
 
 import java.util.List;
@@ -25,9 +27,10 @@ import java.util.stream.Collectors;
 
 public class UserServiceImpl implements UserService {
     private final UserRepository userRepository;
-    private final UserRepository addressRepository;
     private final ObjectMapper objectMapper;
+    private final IdentityService identityService;
     @Override
+    @Transactional(rollbackFor = RuntimeException.class)
     public User createUser(User user) {
         AddressEntity addressEntity=objectMapper.convertValue(user.getAddress(),AddressEntity.class);
         if(userRepository.existsByemailId(user.getEmailId()))
@@ -46,6 +49,7 @@ public class UserServiceImpl implements UserService {
             addressEntity.setUserEntity(userEntity);
             Address address = objectMapper.convertValue(userEntity.getAddressEntity(), Address.class);
             userRepository.save(userEntity);
+            identityService.addUser(user);
             user.setId(userEntity.getId());
             user.setAddress(address);
         }
