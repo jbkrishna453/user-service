@@ -3,6 +3,7 @@ package com.apartmentmanagement.userservice.model;
 import lombok.*;
 
 import java.io.Serializable;
+import java.util.List;
 
 
 @Data
@@ -16,7 +17,7 @@ public class User implements Serializable {
     private String lastName;
     private String emailId;
     private String phoneNo;
-    private Address address;
+    private List<Address> addresses;
     private String password;
     private Recovery recovery;
 }

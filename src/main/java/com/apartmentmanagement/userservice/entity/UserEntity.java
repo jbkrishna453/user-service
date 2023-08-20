@@ -6,6 +6,8 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.util.List;
+
 @Entity
 @Table(name = "users")
 @Data
@@ -23,6 +25,6 @@ public class UserEntity {
     private String emailId;
     private String phoneNo;
 
-    @OneToOne(mappedBy = "userEntity",cascade = CascadeType.ALL,orphanRemoval = true)
-    private AddressEntity addressEntity;
+    @OneToMany(mappedBy = "userEntity",cascade = CascadeType.ALL,orphanRemoval = true)
+    private List<AddressEntity> addressEntity;
 }

@@ -14,6 +14,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.*;
+
 @Service
 @RequiredArgsConstructor
 
@@ -24,7 +26,6 @@ public class UserServiceImpl implements UserService {
     @Override
     @Transactional(rollbackFor = RuntimeException.class)
     public User createUser(User user) {
-        AddressEntity addressEntity=objectMapper.convertValue(user.getAddress(),AddressEntity.class);
         if(userRepository.existsByemailId(user.getEmailId()))
         {
             throw new DataAlreadyExistsException("data already exists");
@@ -34,16 +35,17 @@ public class UserServiceImpl implements UserService {
                     .emailId(user.getEmailId())
                     .FirstName(user.getFirstName())
                     .LastName(user.getLastName())
-                    .addressEntity(addressEntity)
                     .phoneNo(user.getPhoneNo())
                     .build();
 
-            addressEntity.setUserEntity(userEntity);
-            Address address = objectMapper.convertValue(userEntity.getAddressEntity(), Address.class);
+            List<AddressEntity> addressEntity = buildAddress(user, userEntity);
+            userEntity.setAddressEntity(addressEntity);
             userRepository.save(userEntity);
+
+            // calling identity-service
             identityService.addUser(user);
             user.setId(userEntity.getId());
-            user.setAddress(address);
+            user.setAddresses(addressEntity.stream().map(n -> objectMapper.convertValue(n, Address.class)).toList());
         }
         return user;
     }
@@ -51,16 +53,13 @@ public class UserServiceImpl implements UserService {
     @Override
     public User updateUser(User user)
     {
-        UserEntity userEntity=userRepository.findByEmailId(user.getEmailId());
+        UserEntity userEntity = userRepository.findByEmailId(user.getEmailId());
         user.setId(userEntity.getId());
         userEntity.setFirstName(user.getFirstName());
         userEntity.setLastName(user.getLastName());
         userEntity.setEmailId(user.getEmailId());
         userEntity.setPhoneNo(user.getPhoneNo());
-        AddressEntity addressEntity=AddressEntity.builder()
-                        .street(user.getAddress().getStreet())
-                        .city(user.getAddress().getCity())
-                        .country(user.getAddress().getCountry()).build();
+        List<AddressEntity> addressEntity = buildAddress(user, userEntity);
         userEntity.setAddressEntity(addressEntity);
         userRepository.save(userEntity);
         return user;
@@ -68,12 +67,12 @@ public class UserServiceImpl implements UserService {
 
 
     @Override
-    public Address getUserById(Long id) {
+    public List<Address> getUserAddressById(Long id) {
         UserEntity userEntity= userRepository.findById(id).orElseThrow(() -> new DataNotFoundException("user not found"));
         System.out.println("Retrieved UserEntity: " + userEntity);
         User user=objectMapper.convertValue(userEntity,User.class);
-        System.out.println(user.getAddress());
-        return user.getAddress();
+        System.out.println(user.getAddresses());
+        return user.getAddresses();
     }
 
     @Override
@@ -81,5 +80,14 @@ public class UserServiceImpl implements UserService {
         UserEntity userEntity=userRepository.findById(id).orElseThrow(()->new DataNotFoundException("user not found"));
         userRepository.delete(userEntity);
         return "user deleted";
+    }
+
+    public List<AddressEntity> buildAddress(User user, UserEntity userEntity){
+        return
+                user.getAddresses().stream().map(n -> {
+                    AddressEntity addressEntity1 = objectMapper.convertValue(n, AddressEntity.class);
+                    addressEntity1.setUserEntity(userEntity);
+                    return addressEntity1;
+                }).toList();
     }
 }
