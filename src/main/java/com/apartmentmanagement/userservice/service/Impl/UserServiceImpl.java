@@ -1,8 +1,8 @@
 package com.apartmentmanagement.userservice.service.Impl;
 
-import com.apartmentmanagement.userservice.entity.AddressEntity;
+import com.apartmentmanagement.userservice.entity.*;
+import com.apartmentmanagement.userservice.repository.ParkingRepository;
 import com.apartmentmanagement.userservice.service.IdentityService;
-import com.apartmentmanagement.userservice.entity.UserEntity;
 import com.apartmentmanagement.userservice.exception.DataAlreadyExistsException;
 import com.apartmentmanagement.userservice.exception.DataNotFoundException;
 import com.apartmentmanagement.userservice.model.Address;
@@ -14,17 +14,26 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.stream.Collectors;
+
 @Service
 @RequiredArgsConstructor
 
 public class UserServiceImpl implements UserService {
     private final UserRepository userRepository;
+    private final ParkingRepository parkingRepository;
     private final ObjectMapper objectMapper;
     private final IdentityService identityService;
     @Override
     @Transactional(rollbackFor = RuntimeException.class)
     public User createUser(User user) {
         AddressEntity addressEntity=objectMapper.convertValue(user.getAddress(),AddressEntity.class);
+        List<ParkingEntity> parkingEntityList=user.getParkingList().stream()
+                .map(parking -> objectMapper.convertValue(parking,ParkingEntity.class)).toList();
+        parkingEntityList.forEach(parkingEntity -> parkingRepository.save(parkingEntity));
+
         if(userRepository.existsByemailId(user.getEmailId()))
         {
             throw new DataAlreadyExistsException("data already exists");
@@ -32,11 +41,23 @@ public class UserServiceImpl implements UserService {
         else {
             UserEntity userEntity = UserEntity.builder()
                     .emailId(user.getEmailId())
-                    .FirstName(user.getFirstName())
-                    .LastName(user.getLastName())
+                    .firstName(user.getFirstName())
+                    .lastName(user.getLastName())
                     .addressEntity(addressEntity)
                     .phoneNo(user.getPhoneNo())
+                    .mappingEntityList(new ArrayList<>())
                     .build();
+            List<MappingEntity> mappingEntityList=parkingEntityList.stream()
+                            .map(parkingEntity -> {
+                                MappingEntityId mappingEntityId=new MappingEntityId(userEntity.getId(),parkingEntity.getId());
+                                return MappingEntity.builder()
+                                        .id(mappingEntityId)
+                                        .userEntity(userEntity)
+                                        .parking(parkingEntity)
+                                        .build();
+                            })
+                                    .collect(Collectors.toList());
+            userEntity.setMappingEntityList(mappingEntityList);
 
             addressEntity.setUserEntity(userEntity);
             Address address = objectMapper.convertValue(userEntity.getAddressEntity(), Address.class);
@@ -70,10 +91,11 @@ public class UserServiceImpl implements UserService {
     @Override
     public Address getUserById(Long id) {
         UserEntity userEntity= userRepository.findById(id).orElseThrow(() -> new DataNotFoundException("user not found"));
-        System.out.println("Retrieved UserEntity: " + userEntity);
-        User user=objectMapper.convertValue(userEntity,User.class);
-        System.out.println(user.getAddress());
-        return user.getAddress();
+        return Address.builder()
+                .street(userEntity.getAddressEntity().getStreet())
+                .city(userEntity.getAddressEntity().getCity())
+                .country(userEntity.getAddressEntity().getCountry())
+                .build();
     }
 
     @Override
