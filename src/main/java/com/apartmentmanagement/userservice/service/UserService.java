@@ -9,5 +9,6 @@ public interface UserService {
     User createUser(User user);
     User updateUser(User user);
     List<Address> getUserAddressById(Long id);
+    List<Address> addUserAddress(String emailId, Address address);
     String deleteUserById(Long id);
 }

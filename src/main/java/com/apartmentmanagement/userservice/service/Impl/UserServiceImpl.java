@@ -68,11 +68,28 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public List<Address> getUserAddressById(Long id) {
-        UserEntity userEntity= userRepository.findById(id).orElseThrow(() -> new DataNotFoundException("user not found"));
+        UserEntity userEntity= userRepository.findById(id).orElseThrow(() -> new DataNotFoundException("User details were not found"));
         System.out.println("Retrieved UserEntity: " + userEntity);
         User user=objectMapper.convertValue(userEntity,User.class);
         System.out.println(user.getAddresses());
         return user.getAddresses();
+    }
+
+    @Override
+    @Transactional(rollbackFor = RuntimeException.class)
+    public List<Address> addUserAddress(String emailId, Address address){
+        List<Address> addresses;
+        if(!userRepository.existsByemailId(emailId)){
+            throw new DataNotFoundException("User details could not be fetched");
+        }else{
+            UserEntity userEntity = userRepository.findByEmailId(emailId);
+            AddressEntity addressEntity = objectMapper.convertValue(address, AddressEntity.class);
+            addressEntity.setUserEntity(userEntity);
+            userEntity.getAddressEntity().add(addressEntity);
+            userRepository.save(userEntity);
+            addresses = userEntity.getAddressEntity().stream().map(n -> objectMapper.convertValue(n,Address.class)).toList();
+        }
+        return addresses;
     }
 
     @Override
