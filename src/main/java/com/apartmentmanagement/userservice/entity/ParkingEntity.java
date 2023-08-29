@@ -26,6 +26,6 @@ public class ParkingEntity {
     @Column(name="location")
     private String location;
 
-//    @OneToMany(mappedBy = "parking",cascade = CascadeType.ALL,orphanRemoval = true)
-//    private List<MappingEntity> mappingEntityList;
+    @OneToMany(mappedBy = "parking",cascade = CascadeType.ALL,orphanRemoval = true)
+    private List<MappingEntity> mappingEntityList;
 }

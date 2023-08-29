@@ -21,7 +21,7 @@ public class AddressEntity {
     private String country;
 
     @JsonIgnore
-    @OneToOne
+    @ManyToOne
     @JoinColumn(name = "user_id")
     private UserEntity userEntity;
 }

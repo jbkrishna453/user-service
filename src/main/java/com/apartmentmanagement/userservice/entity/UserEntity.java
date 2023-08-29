@@ -7,7 +7,9 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+
 import java.awt.*;
+
 import java.util.List;
 
 @Entity
@@ -35,9 +37,14 @@ public class UserEntity {
     @Column(name = "phone_no")
     private String phoneNo;
 
-    @OneToOne(mappedBy = "userEntity", cascade = CascadeType.ALL, orphanRemoval = true)
-    private AddressEntity addressEntity;
+
+//    @OneToOne(mappedBy = "userEntity", cascade = CascadeType.ALL, orphanRemoval = true)
+//    private AddressEntity addressEntity;
 
     @OneToMany(mappedBy = "userEntity",cascade = CascadeType.ALL,orphanRemoval = true)
     private List<MappingEntity> mappingEntityList;
+
+    @OneToMany(mappedBy = "userEntity",cascade = CascadeType.ALL,orphanRemoval = true)
+    private List<AddressEntity> addressEntity;
+
 }
